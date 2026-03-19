@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KŌHI — Specialty Coffee</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f5ede0;
+      --espresso: #1a0f00;
+      --roast: #4a2800;
+      --gold: #c8922a;
+      --light-roast: #d4a96a;
+      --foam: #fdf6ec;
+      --text: #2c1a08;
+      --muted: #7a5c3a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--espresso);
+      color: var(--cream);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom Cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--gold);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease, width 0.2s, height 0.2s;
+      transform: translate(-50%, -50%);
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(200, 146, 42, 0.5);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.35s ease, width 0.3s, height 0.3s, border-color 0.3s;
+    }
+    body:has(a:hover) .cursor-ring,
+    body:has(button:hover) .cursor-ring { width: 56px; height: 56px; border-color: var(--gold); }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 60px;
+      z-index: 100;
+      mix-blend-mode: normal;
+      transition: background 0.4s;
+    }
+    nav.scrolled { background: rgba(26,15,0,0.92); backdrop-filter: blur(12px); padding: 18px 60px; }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; color: var(--gold); }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--espresso);
+      border: none;
+      padding: 10px 26px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .nav-cta:hover { background: var(--light-roast); transform: scale(1.04); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 140px 60px 80px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 6vw, 6rem);
+      line-height: 1.05;
+      font-weight: 700;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s forwards;
+    }
+    .hero-title em { font-style: italic; color: var(--light-roast); }
+
+    .hero-sub {
+      margin-top: 28px;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: rgba(245,237,224,0.65);
+      max-width: 420px;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.7s forwards;
+    }
+
+    .hero-actions {
+      margin-top: 48px;
+      display: flex; gap: 20px; align-items: center;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.9s forwards;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--espresso);
+      border: none;
+      padding: 16px 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.88rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .btn-primary:hover { background: var(--light-roast); transform: translateY(-2px); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(245,237,224,0.3);
+      color: var(--cream);
+      padding: 15px 36px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: border-color 0.25s, color 0.25s;
+      text-decoration: none;
+      display: inline-flex; align-items: center;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    .hero-right {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-img-wrapper {
+      position: absolute; inset: 0;
+      opacity: 0;
+      animation: fadeIn 1.2s 0.4s forwards;
+    }
+
+    .hero-img-wrapper img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.7) saturate(0.9);
+    }
+
+    .hero-img-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, var(--espresso) 0%, transparent 40%);
+    }
+
+    .hero-badge {
+      position: absolute;
+      bottom: 60px; right: 60px;
+      width: 120px; height: 120px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      animation: spin 18s linear infinite;
+      z-index: 3;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hero-badge-inner {
+      position: absolute;
+      bottom: 60px; right: 60px;
+      width: 120px; height: 120px;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 4;
+      font-size: 1.6rem;
+    }
+
+    /* MARQUEE */
+    .marquee-strip {
+      background: var(--gold);
+      padding: 16px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .marquee-inner {
+      display: inline-flex;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-item {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--espresso);
+      font-weight: 500;
+      padding: 0 40px;
+    }
+    .marquee-dot { opacity: 0.4; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ABOUT */
+    .section { padding: 120px 60px; }
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .section-label::before { content: ''; width: 40px; height: 1px; background: var(--gold); }
+
+    .about { background: var(--espresso); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .about-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      line-height: 1.15;
+      margin-bottom: 28px;
+    }
+    .about-title em { font-style: italic; color: var(--light-roast); }
+    .about-text { color: rgba(245,237,224,0.65); line-height: 1.85; font-size: 0.97rem; margin-bottom: 20px; }
+
+    .about-stats { display: flex; gap: 48px; margin-top: 48px; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+    .about-img-stack { position: relative; height: 520px; }
+    .about-img-stack img {
+      position: absolute;
+      object-fit: cover;
+      border: 4px solid var(--espresso);
+    }
+    .about-img-stack img:first-child { width: 75%; height: 75%; top: 0; left: 0; }
+    .about-img-stack img:last-child { width: 55%; height: 55%; bottom: 0; right: 0; filter: brightness(0.8); }
+
+    /* PRODUCTS */
+    .products { background: var(--foam); color: var(--text); }
+    .products .section-label { color: var(--roast); }
+    .products .section-label::before { background: var(--roast); }
+    .products-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      color: var(--text);
+      margin-bottom: 64px;
+    }
+
+    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+    .product-card {
+      background: white;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s;
+      cursor: none;
+    }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 24px 60px rgba(74,40,0,0.18); }
+
+    .product-img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .product-card:hover .product-img { transform: scale(1.04); }
+
+    .product-info { padding: 28px; }
+    .product-tag {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .product-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .product-desc { font-size: 0.85rem; line-height: 1.7; color: #6b4f30; margin-bottom: 20px; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1.1rem; font-weight: 500; color: var(--roast); }
+    .product-btn {
+      background: var(--roast);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: background 0.2s;
+    }
+    .product-btn:hover { background: var(--gold); }
+
+    /* PROCESS */
+    .process { background: var(--roast); }
+    .process-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      margin-bottom: 72px;
+      max-width: 600px;
+    }
+
+    .process-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+    .step {
+      background: rgba(255,255,255,0.05);
+      padding: 48px 36px;
+      transition: background 0.3s;
+      border-top: 2px solid transparent;
+    }
+    .step:hover { background: rgba(255,255,255,0.1); border-top-color: var(--gold); }
+
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      color: rgba(200,146,42,0.25);
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    .step-icon { font-size: 2rem; margin-bottom: 20px; }
+    .step-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 14px; }
+    .step-text { font-size: 0.85rem; line-height: 1.75; color: rgba(245,237,224,0.55); }
+
+    /* TESTIMONIALS */
+    .testimonials { background: var(--cream); color: var(--text); }
+    .testimonials .section-label { color: var(--roast); }
+    .testimonials .section-label::before { background: var(--roast); }
+    .testimonials-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      margin-bottom: 60px;
+      color: var(--text);
+    }
+
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .testi-card {
+      background: white;
+      padding: 40px;
+      border-left: 3px solid var(--gold);
+      transition: transform 0.25s;
+    }
+    .testi-card:hover { transform: translateY(-4px); }
+    .testi-stars { color: var(--gold); font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 20px; }
+    .testi-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.05rem; line-height: 1.7; color: var(--text); margin-bottom: 24px; }
+    .testi-author { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+    /* NEWSLETTER */
+    .newsletter {
+      background: var(--gold);
+      padding: 100px 60px;
+      text-align: center;
+    }
+    .newsletter-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      color: var(--espresso);
+      margin-bottom: 16px;
+    }
+    .newsletter-sub { color: rgba(26,15,0,0.65); margin-bottom: 48px; font-size: 1rem; }
+    .newsletter-form { display: flex; gap: 0; max-width: 480px; margin: 0 auto; }
+    .newsletter-input {
+      flex: 1;
+      padding: 16px 24px;
+      border: none;
+      background: var(--espresso);
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .newsletter-input::placeholder { color: rgba(245,237,224,0.4); }
+    .newsletter-submit {
+      background: var(--espresso);
+      color: var(--gold);
+      border: none;
+      padding: 16px 32px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: background 0.25s;
+    }
+    .newsletter-submit:hover { background: var(--roast); }
+
+    /* FOOTER */
+    footer {
+      background: #0f0800;
+      padding: 80px 60px 40px;
+      color: rgba(245,237,224,0.45);
+    }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 60px; }
+    .footer-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--gold); margin-bottom: 20px; }
+    .footer-tagline { font-size: 0.85rem; line-height: 1.75; max-width: 280px; }
+    .footer-heading { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cream); margin-bottom: 20px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .footer-links a { color: rgba(245,237,224,0.45); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(245,237,224,0.08); padding-top: 32px; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; }
+    .footer-socials { display: flex; gap: 20px; }
+    .footer-socials a { color: rgba(245,237,224,0.45); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+    .footer-socials a:hover { color: var(--gold); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      nav { padding: 22px 28px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-right { height: 320px; }
+      .hero-right img { width: 100%; height: 100%; object-fit: cover; }
+      .hero-img-overlay { background: linear-gradient(to bottom, var(--espresso) 0%, transparent 50%); }
+      .hero-left { padding: 120px 28px 60px; }
+      .section { padding: 80px 28px; }
+      .about, .products-grid, .process-steps, .testi-grid, .footer-top { grid-template-columns: 1fr; }
+      .newsletter { padding: 60px 28px; }
+      .newsletter-form { flex-direction: column; }
+      footer { padding: 60px 28px 32px; }
+      .footer-bottom { flex-direction: column; gap: 20px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">KŌHI</a>
+    <ul class="nav-links">
+      <li><a href="#about">Our Story</a></li>
+      <li><a href="#products">Shop</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Order Now</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <p class="hero-eyebrow">Single Origin · Specialty Grade</p>
+      <h1 class="hero-title">
+        Craft Coffee,<br/><em>Carefully</em><br/>Sourced.
+      </h1>
+      <p class="hero-sub">
+        From remote highlands to your morning ritual — we travel the world so every sip carries the story of its origin.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Explore Coffees</button>
+        <a href="#about" class="btn-ghost">Our Story →</a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-img-wrapper">
+        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&q=80" alt="Coffee brewing"/>
+        <div class="hero-img-overlay"></div>
+      </div>
+      <div class="hero-badge-inner">☕</div>
+      <div class="hero-badge" style="font-size:0.58rem; padding: 12px; text-align:center; line-height:1.6;">
+        Est · 2018 · Specialty · Roasters · Est · 2018 · Specialty · Roasters ·&nbsp;
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-strip" aria-hidden="true">
+    <div class="marquee-inner">
+      <span class="marquee-item">Single Origin</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Ethically Sourced</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Small Batch Roasted</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Direct Trade</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Specialty Grade</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Freshly Roasted</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Single Origin</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Ethically Sourced</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Small Batch Roasted</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Direct Trade</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Specialty Grade</span><span class="marquee-dot marquee-item">✦</span>
+      <span class="marquee-item">Freshly Roasted</span><span class="marquee-dot marquee-item">✦</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="section about" id="about">
+    <div class="reveal">
+      <div class="section-label">Our Story</div>
+      <h2 class="about-title">Born from a <em>passion</em><br/>for the perfect cup.</h2>
+      <p class="about-text">KŌHI began in a small roastery in Hyderabad with a simple belief: exceptional coffee demands exceptional care at every step — from the farmer's hands to your cup.</p>
+      <p class="about-text">We partner directly with farmers across Ethiopia, Colombia, and Sumatra, paying above fair-trade prices and co-investing in sustainable growing practices.</p>
+      <div class="about-stats">
+        <div>
+          <div class="stat-num">12+</div>
+          <div class="stat-label">Origins</div>
+        </div>
+        <div>
+          <div class="stat-num">40k</div>
+          <div class="stat-label">Happy Customers</div>
+        </div>
+        <div>
+          <div class="stat-num">6yr</div>
+          <div class="stat-label">Roasting</div>
+        </div>
+      </div>
+    </div>
+    <div class="about-img-stack reveal">
+      <img src="https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb?w=600&q=80" alt="Coffee farm"/>
+      <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80" alt="Coffee roasting"/>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="section products" id="products">
+    <div class="section-label">Our Coffees</div>
+    <h2 class="products-title reveal">Find your<br/><em style="font-family:'Playfair Display',serif;">perfect roast.</em></h2>
+    <div class="products-grid">
+
+      <div class="product-card reveal">
+        <img class="product-img" src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&q=80" alt="Ethiopia Yirgacheffe"/>
+        <div class="product-info">
+          <div class="product-tag">Light Roast · Ethiopia</div>
+          <div class="product-name">Yirgacheffe Natural</div>
+          <div class="product-desc">Bright, floral, and vibrant with notes of blueberry, jasmine, and bergamot. A truly exceptional single origin.</div>
+          <div class="product-footer">
+            <div class="product-price">₹1,450</div>
+            <button class="product-btn" onclick="addToCart('Yirgacheffe Natural', 1450)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card reveal">
+        <img class="product-img" src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80" alt="Colombia Huila"/>
+        <div class="product-info">
+          <div class="product-tag">Medium Roast · Colombia</div>
+          <div class="product-name">Huila Valley Reserve</div>
+          <div class="product-desc">Smooth and balanced with caramel sweetness, red apple acidity, and a lingering chocolate finish.</div>
+          <div class="product-footer">
+            <div class="product-price">₹1,350</div>
+            <button class="product-btn" onclick="addToCart('Huila Valley Reserve', 1350)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card reveal">
+        <img class="product-img" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80" alt="Sumatra Mandheling"/>
+        <div class="product-info">
+          <div class="product-tag">Dark Roast · Indonesia</div>
+          <div class="product-name">Sumatra Mandheling</div>
+          <div class="product-desc">Bold, earthy, and full-bodied with dark chocolate, cedar, and a rich, syrupy mouthfeel. Perfect for espresso.</div>
+          <div class="product-footer">
+            <div class="product-price">₹1,250</div>
+            <button class="product-btn" onclick="addToCart('Sumatra Mandheling', 1250)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="section process" id="process">
+    <div class="section-label">How We Work</div>
+    <h2 class="process-title reveal">From seed to cup —<br/>every step matters.</h2>
+    <div class="process-steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <div class="step-icon">🌱</div>
+        <div class="step-title">Direct Sourcing</div>
+        <div class="step-text">We travel to origin farms, building direct relationships with farmers who share our commitment to quality and sustainability.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <div class="step-icon">🔬</div>
+        <div class="step-title">Quality Selection</div>
+        <div class="step-text">Only specialty-grade lots scoring 85+ on the SCA scale make the cut. Our Q-graders taste hundreds of samples each season.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <div class="step-icon">🔥</div>
+        <div class="step-title">Small-Batch Roasting</div>
+        <div class="step-text">Each origin is roasted to its ideal profile in 12kg batches. We roast twice weekly to ensure peak freshness on arrival.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">04</div>
+        <div class="step-icon">📦</div>
+        <div class="step-title">Swift Delivery</div>
+        <div class="step-text">Shipped within 48 hours of roasting in valve-sealed bags to preserve aroma. Pan-India delivery in 3–5 business days.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section testimonials">
+    <div class="section-label">Loved By Many</div>
+    <h2 class="testimonials-title reveal">What our customers say.</h2>
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"The Yirgacheffe completely changed how I think about coffee. I had no idea light roasts could be so vibrant and complex."</div>
+        <div class="testi-author">Priya M. — Bangalore</div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"KŌHI's subscription is the best thing I've done for my mornings. Fresh roasted, beautifully packaged, and the flavor is extraordinary."</div>
+        <div class="testi-author">Arjun K. — Hyderabad</div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"I've tried dozens of specialty roasters. KŌHI's sourcing transparency and cup quality are genuinely world-class."</div>
+        <div class="testi-author">Sneha R. — Mumbai</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter" id="contact">
+    <h2 class="newsletter-title reveal">Join the KŌHI Circle</h2>
+    <p class="newsletter-sub reveal">Early access to new origins, brew guides, and 10% off your first order.</p>
+    <div class="newsletter-form reveal">
+      <input class="newsletter-input" type="email" id="emailInput" placeholder="your@email.com"/>
+      <button class="newsletter-submit" onclick="subscribe()">Subscribe</button>
+    </div>
+    <p id="sub-msg" style="margin-top:20px; font-size:0.85rem; color:var(--espresso); opacity:0; transition:opacity 0.4s;"></p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">KŌHI</div>
+        <p class="footer-tagline">Specialty coffee roasters dedicated to traceability, craft, and the pursuit of the extraordinary cup.</p>
+      </div>
+      <div>
+        <div class="footer-heading">Shop</div>
+        <ul class="footer-links">
+          <li><a href="#">All Coffees</a></li>
+          <li><a href="#">Subscriptions</a></li>
+          <li><a href="#">Brewing Gear</a></li>
+          <li><a href="#">Gift Cards</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Learn</div>
+        <ul class="footer-links">
+          <li><a href="#">Brew Guides</a></li>
+          <li><a href="#">Origin Stories</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Company</div>
+        <ul class="footer-links">
+          <li><a href="#">Our Story</a></li>
+          <li><a href="#">Sustainability</a></li>
+          <li><a href="#">Wholesale</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KŌHI Specialty Coffee. All rights reserved.</span>
+      <div class="footer-socials">
+        <a href="#">Instagram</a>
+        <a href="#">Twitter</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Toast -->
+  <div id="cart-toast" style="
+    position:fixed; bottom:32px; right:32px;
+    background:var(--espresso); color:var(--gold);
+    padding:16px 28px; font-size:0.85rem; letter-spacing:0.05em;
+    border-left:3px solid var(--gold);
+    transform:translateY(80px); opacity:0;
+    transition:transform 0.4s ease, opacity 0.4s ease;
+    z-index:200;
+  "></div>
+
+  <script>
+    // Custom cursor
+    const cursor = document.getElementById('cursor');
+    const cursorRing = document.getElementById('cursorRing');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+      setTimeout(() => {
+        cursorRing.style.left = e.clientX + 'px';
+        cursorRing.style.top = e.clientY + 'px';
+      }, 80);
+    });
+
+    // Sticky nav
+    window.addEventListener('scroll', () => {
+      document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Cart toast
+    function showToast(msg) {
+      const t = document.getElementById('cart-toast');
+      t.textContent = msg;
+      t.style.transform = 'translateY(0)';
+      t.style.opacity = '1';
+      setTimeout(() => { t.style.transform = 'translateY(80px)'; t.style.opacity = '0'; }, 2800);
+    }
+
+    function addToCart(name, price) {
+      showToast(`✓ ${name} added to cart — ₹${price.toLocaleString()}`);
+    }
+
+    // Newsletter
+    function subscribe() {
+      const email = document.getElementById('emailInput').value;
+      const msg = document.getElementById('sub-msg');
+      if (!email || !email.includes('@')) {
+        msg.style.color = '#c0392b';
+        msg.textContent = 'Please enter a valid email address.';
+        msg.style.opacity = '1';
+        return;
+      }
+      msg.style.color = 'var(--espresso)';
+      msg.textContent = '☕ Welcome to the circle! Check your inbox for your 10% discount.';
+      msg.style.opacity = '1';
+      document.getElementById('emailInput').value = '';
+    }
+  </script>
+</body>
+</html>
